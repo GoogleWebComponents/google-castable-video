@@ -1,12 +1,3 @@
-<!--
-    @license
-    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
-    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-    Code distributed by Google as part of the polymer project is also
-    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 <!doctype html>
 <html>
 <head>
@@ -16,49 +7,6 @@
   <script src="../platform/platform.js"></script>
   <link rel="import" href="google-castable-video.html">
 
-  <script>
-    window.onload = function init(){
-      var vid = document.querySelector("video");
-      var playButton = document.querySelector("#play");
-      var pauseButton = document.querySelector("#pause");
-      var castButton = document.querySelector("#cast");
-      var progressSlider = document.querySelector("#progress");
-
-      playButton.addEventListener("click", function(){
-        vid.play();
-      });
-
-      pauseButton.addEventListener("click", function(){
-        vid.pause();
-      });
-
-      castButton.addEventListener("click", function(){
-        vid.launchSessionManager();
-      });
-
-      progressSlider.addEventListener("mouseup", function(){
-        var duration = vid.duration;
-        var newPosition = ( duration / 100 ) * this.value;
-        vid.currentTime = newPosition;
-      });
-
-      //IMPORTANT use this to get the currentTime even when casting
-      vid.addEventListener("google-castable-video-timeupdate",function(e){
-        var duration = vid.duration;
-        var currentTime = e.detail.currentTime;
-        progressSlider.value = currentTime * ( 100 / duration );
-      });
-
-      //listen for casting event to change icon
-      vid.addEventListener("google-castable-video-casting",function(e){
-        if(e.detail.casting)
-          castButton.innerHTML = "STOP CASTING";
-        else
-          castButton.innerHTML = "START CASTING";
-      });
-    }
-  </script>
-
 </head>
 <body unresolved>
 
@@ -66,6 +14,7 @@
 
   <video is="google-castable-video" width="500">
     <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/big_buck_bunny_1080p.mp4" type="video/mp4">
+    <source src="https://bennugd-vlc.googlecode.com/files/big_buck_bunny_480p.webm" type="video/webm"></source>
   </video>
 
   <div id="controls">
@@ -74,6 +23,48 @@
     <button id="cast">START CASTING</button>
     <input id="progress" type="range" min="0" max="100" value="0">
   </div>
+
+  <script>
+    var vid = document.querySelector("video");
+    var playButton = document.querySelector("#play");
+    var pauseButton = document.querySelector("#pause");
+    var castButton = document.querySelector("#cast");
+    var progressSlider = document.querySelector("#progress");
+
+    playButton.addEventListener("click", function(){
+      vid.play();
+    });
+
+    pauseButton.addEventListener("click", function(){
+      vid.pause();
+    });
+
+    castButton.addEventListener("click", function(){
+      vid.launchSessionManager();
+    });
+
+    progressSlider.addEventListener("mouseup", function(){
+      var duration = vid.duration;
+      var newPosition = ( duration / 100 ) * this.value;
+      vid.currentTime = newPosition;
+    });
+
+    //IMPORTANT use this to get the currentTime even when casting
+    vid.addEventListener("google-castable-video-timeupdate",function(e){
+      var duration = vid.duration;
+      var currentTime = e.detail.currentTime;
+      progressSlider.value = currentTime * ( 100 / duration );
+    });
+
+    //listen for casting event to change icon
+    vid.addEventListener("google-castable-video-casting",function(e){
+      if (e.detail.casting) {
+        castButton.innerHTML = "STOP CASTING";
+      } else {
+        castButton.innerHTML = "START CASTING";
+      }  
+    });
+  </script>
 
 </body>
 </html>
