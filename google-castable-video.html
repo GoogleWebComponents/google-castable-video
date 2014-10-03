@@ -48,20 +48,23 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 
         /**
          * Sets or returns the current playback position (in seconds).
+         * Since the local video is paused when the video is playing on the Chromecast device
+         * the objects currentTime property doesn't represent the actual currentTime of the video
+         * playing on the Chromecast device. To always get the actual position please use 
          * 
-         * @property realCurrentTime
+         * @property bothCurrentTime
          * @type number
          * @default 0
          */
-        get realCurrentTime() {
-          if(this._casting && this._castMedia){
+        get bothCurrentTime() {
+          if (this._casting && this._castMedia) {
             return this._castMedia.getEstimatedTime();
           } else {
             return this.currentTime;
           }
         },
 
-        set realCurrentTime(val) { return this.currentTime = val; },  
+        set bothCurrentTime(val) { return this.currentTime = val; },  
 
         /**
          * The mode state depending on whether the video is playing locally or on the cast device.
@@ -172,7 +175,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         * @method launchSessionManager
         */
         launchSessionManager: function(){
-          if(this._receiverAvailable){
+          if (this._receiverAvailable) {
             // Create the session with the receiver.
             chrome.cast.requestSession(function(e){
               // The onRequestSessionSuccess handler gets executed when we're connected.
