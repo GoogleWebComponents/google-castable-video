@@ -28,7 +28,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
   extends="video" 
   on-seeked="{{onSeeked}}"
   on-volumechange="{{onVolumechange}}"
-  on-timeupdate="{{onTimeupdate}}">
+  on-timeupdate="{{onTimeupdate}}" attributes="appID">
 
   <script>
     (function() {
@@ -106,6 +106,14 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         _session: null,
         get session() { return this._session; },
 
+        /**
+         * The appID that references which receiver the Chromecast will load.
+         * 
+         * @property appID
+         * @type string
+         * @default chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
+         */
+	appID: null,
         ready: function() {
           // Initialize the cast api.
           window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
@@ -119,8 +127,11 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 
         // Called internally when the cast sender api has been loaded.
         initializeCastApi: function() {
-          var applicationID = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
-          var sessionRequest = new chrome.cast.SessionRequest(applicationID);
+	  if (this.appID===null || typeof this.appID === "undefined") {
+		this.appID=chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
+		// TODO ... process for selecting styled media receiver
+	  }
+          var sessionRequest = new chrome.cast.SessionRequest(this.appID);
           var apiConfig = new chrome.cast.ApiConfig(sessionRequest,
             function(e){
               // The sessionListener.
@@ -237,7 +248,6 @@ Instead of listening for the video element's `timeupdate` event please listen fo
             this._castMedia.seek(req);
           }
         },
-
         /**
          * Call the `play` method from your controls.
          *
@@ -250,8 +260,8 @@ Instead of listening for the video element's `timeupdate` event please listen fo
             // Handle cast media.
             if (!this._castMedia) {
               var mediaInfo = new chrome.cast.media.MediaInfo(this.currentSrc);
-              // TODO get current type from currentsrc
-              mediaInfo.contentType = 'video/mp4';
+	      var contentType=document.querySelector("source[src='"+this.currentSrc+"']").getAttribute('type');
+              mediaInfo.contentType = (contentType.indexOf(";")!==-1) ? contentType.slice(0, contentType.indexOf(";")) : contentType;
               var request = new chrome.cast.media.LoadRequest(mediaInfo);
               this._session.loadMedia(request,
                 this.onMediaDiscovered.bind(this, 'loadMedia'),
