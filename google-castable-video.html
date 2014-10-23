@@ -113,7 +113,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
          * @type string
          * @default chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
          */
-	      appID: null,
+        appID: null,
         ready: function() {
           // Initialize the cast api.
           window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
@@ -128,7 +128,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         // Called internally when the cast sender api has been loaded.
         initializeCastApi: function() {
       	  if (this.appID === null || typeof this.appID === "undefined") {
-        		this.appID = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
+      	    this.appID = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
         		// TODO ... process for selecting styled media receiver
       	  }
           var sessionRequest = new chrome.cast.SessionRequest(this.appID);
