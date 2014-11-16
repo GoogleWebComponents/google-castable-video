@@ -127,10 +127,10 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 
         // Called internally when the cast sender api has been loaded.
         initializeCastApi: function() {
-      	  if (this.appID === null || typeof this.appID === "undefined") {
-      	    this.appID = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
-        		// TODO ... process for selecting styled media receiver
-      	  }
+          if (this.appID === null || typeof this.appID === "undefined") {
+            this.appID = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
+            // TODO ... process for selecting styled media receiver
+          }
           var sessionRequest = new chrome.cast.SessionRequest(this.appID);
           var apiConfig = new chrome.cast.ApiConfig(sessionRequest,
             function(e){
@@ -260,8 +260,15 @@ Instead of listening for the video element's `timeupdate` event please listen fo
             // Handle cast media.
             if (!this._castMedia) {
               var mediaInfo = new chrome.cast.media.MediaInfo(this.currentSrc);
-	            var contentType = document.querySelector("source[src = '"+this.currentSrc+"']").getAttribute('type');
-              mediaInfo.contentType = (contentType.indexOf(";") !== -1) ? contentType.slice(0, contentType.indexOf(";")) : contentType;
+              [].forEach.call( // loop through DOM video sources to find the contentType of the current source
+                document.querySelectorAll("video source"),
+                function(el) {
+                 // the HTML5 video API resolves the DOM 'src' attribute to an absolute URL for the value of 'currentSrc'; to make it matchable, then, we can only rely on the last segment of the URL
+                 if (el.getAttribute("src").split('/').pop()===this.currentSrc.split('/').pop()) {
+                  mediaInfo.contentType = el.getAttribute('type');
+                 }
+                }
+              );
               var request = new chrome.cast.media.LoadRequest(mediaInfo);
               this._session.loadMedia(request,
                 this.onMediaDiscovered.bind(this, 'loadMedia'),
@@ -296,7 +303,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
          * @param {Object} detail
          *   @param {number} detail.currentTime The current video position.
          */
-         triggerTimeupdate: function(position) {
+        triggerTimeupdate: function(position) {
           this.fire('google-castable-video-timeupdate', { currentTime: position });
         },
 
