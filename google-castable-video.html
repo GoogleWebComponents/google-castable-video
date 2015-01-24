@@ -13,7 +13,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
     <video is="google-castable-video">
       <source src="video.mp4" type="video/mp4">
     </video>
- 
+
 
 @element google-castable-video
 @blurb A web component for extending HTML5 video to make it Chromecast enabled.
@@ -23,12 +23,12 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 <!-- TODO(tschaeff):
 - ratechange to change playbackspeed (if even possible)
 -->
-<polymer-element 
-  name="google-castable-video" 
-  extends="video" 
+<polymer-element
+  name="google-castable-video"
+  extends="video"
   on-seeked="{{onSeeked}}"
   on-volumechange="{{onVolumechange}}"
-  on-timeupdate="{{onTimeupdate}}">
+  on-timeupdate="{{onTimeupdate}}" attributes="appID">
 
   <script>
     (function() {
@@ -38,12 +38,12 @@ Instead of listening for the video element's `timeupdate` event please listen fo
       Polymer({
         /**
          * The real paused state for local and cast playback.
-         * 
+         *
          * @property bothPaused
          * @type bool
          * @default true
          */
-        _bothPaused: true, 
+        _bothPaused: true,
         get bothPaused() { return this._bothPaused; },
 
         /**
@@ -51,7 +51,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
          * Since the local video is paused when the video is playing on the Chromecast device
          * the objects currentTime property doesn't represent the actual currentTime of the video
          * playing on the Chromecast device. To always get the actual position please use bothCurrentTime.
-         * 
+         *
          * @property bothCurrentTime
          * @type number
          * @default 0
@@ -64,11 +64,11 @@ Instead of listening for the video element's `timeupdate` event please listen fo
           }
         },
 
-        set bothCurrentTime(val) { return this.currentTime = val; },  
+        set bothCurrentTime(val) { return this.currentTime = val; },
 
         /**
          * The mode state depending on whether the video is playing locally or on the cast device.
-         * 
+         *
          * @property casting
          * @type bool
          * @default false
@@ -78,7 +78,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 
         /**
          * Returns if any Chromecast is available.
-         * 
+         *
          * @property receiverAvailable
          * @type bool
          * @default false
@@ -88,7 +88,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 
         /**
          * The `chrome.cast.Media` object.
-         * 
+         *
          * @property castMedia
          * @type chrome.cast.Media
          * @default null
@@ -98,7 +98,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 
         /**
          * The `chrome.cast.Session` object.
-         * 
+         *
          * @property session
          * @type chrome.cast.Session
          * @default null
@@ -106,6 +106,14 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         _session: null,
         get session() { return this._session; },
 
+        /**
+         * The appID that references which receiver the Chromecast will load.
+         *
+         * @property appID
+         * @type string
+         * @default chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
+         */
+        appID: null,
         ready: function() {
           // Initialize the cast api.
           window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
@@ -119,8 +127,11 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 
         // Called internally when the cast sender api has been loaded.
         initializeCastApi: function() {
-          var applicationID = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
-          var sessionRequest = new chrome.cast.SessionRequest(applicationID);
+          if (this.appID === null || typeof this.appID === "undefined") {
+            this.appID = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
+            // TODO ... process for selecting styled media receiver
+          }
+          var sessionRequest = new chrome.cast.SessionRequest(this.appID);
           var apiConfig = new chrome.cast.ApiConfig(sessionRequest,
             function(e){
               // The sessionListener.
@@ -157,7 +168,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
           chrome.cast.initialize(apiConfig, function(){
             // The onInitSuccess method.
             /**
-             * The `google-castable-video-initialized` event is fired when 
+             * The `google-castable-video-initialized` event is fired when
              * the cast client API has been initialized.
              *
              * @event google-castable-video-initialized
@@ -216,7 +227,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
           }
         },
 
-        // Internal method gets called when media was set through `launchsession` 
+        // Internal method gets called when media was set through `launchsession`
         // or was already playing on cast device.
         onMediaDiscovered: function(how, media) {
           this._castMedia = media;
@@ -237,7 +248,6 @@ Instead of listening for the video element's `timeupdate` event please listen fo
             this._castMedia.seek(req);
           }
         },
-
         /**
          * Call the `play` method from your controls.
          *
@@ -250,8 +260,15 @@ Instead of listening for the video element's `timeupdate` event please listen fo
             // Handle cast media.
             if (!this._castMedia) {
               var mediaInfo = new chrome.cast.media.MediaInfo(this.currentSrc);
-              // TODO get current type from currentsrc
-              mediaInfo.contentType = 'video/mp4';
+              [].forEach.call( // loop through DOM video sources to find the contentType of the current source
+                document.querySelectorAll("video source"),
+                function(el) {
+                 // the HTML5 video API resolves the DOM 'src' attribute to an absolute URL for the value of 'currentSrc'; to make it matchable, then, we can only rely on the last segment of the URL
+                 if (el.getAttribute("src").split('/').pop()===this.currentSrc.split('/').pop()) {
+                  mediaInfo.contentType = el.getAttribute('type');
+                 }
+                }
+              );
               var request = new chrome.cast.media.LoadRequest(mediaInfo);
               this._session.loadMedia(request,
                 this.onMediaDiscovered.bind(this, 'loadMedia'),
@@ -279,19 +296,19 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         },
 
         /**
-         * The `google-castable-video-timeupdate` event is fired whenever 
+         * The `google-castable-video-timeupdate` event is fired whenever
          * the video's playback position changes.
          *
          * @event google-castable-video-timeupdate
          * @param {Object} detail
          *   @param {number} detail.currentTime The current video position.
          */
-         triggerTimeupdate: function(position) {
+        triggerTimeupdate: function(position) {
           this.fire('google-castable-video-timeupdate', { currentTime: position });
         },
 
         /**
-         * The `google-castable-video-error` event is fired whenever 
+         * The `google-castable-video-error` event is fired whenever
          * an error occurs.
          *
          * @event google-castable-video-error
@@ -303,7 +320,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         },
 
         /**
-         * The `google-castable-video-receiver-status` event is fired whenever 
+         * The `google-castable-video-receiver-status` event is fired whenever
          * the availability of Chromecasts changes. Use this to show or hide the cast icon.
          *
          * @event google-castable-video-receiver-status
