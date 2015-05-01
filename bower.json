@@ -6,9 +6,9 @@
   ],
   "description": "HTML5 Video Element with extended Chromecast functionality.",
   "keywords": [
-    "video", 
-    "chromecast", 
-    "polymer", 
+    "video",
+    "chromecast",
+    "polymer",
     "web-components"
   ],
   "main": "google-castable-video.html",
@@ -19,9 +19,10 @@
     "/tests/"
   ],
   "dependencies": {
-    "polymer": "Polymer/polymer#^0.4.1"
+    "polymer": "Polymer/polymer#0-8.preview"
   },
   "devDependencies": {
-    "web-component-tester": "Polymer/web-component-tester#^0.7.3"
+    "iron-doc-viewer": "PolymerElements/iron-doc-viewer#^0.8.8",
+    "web-component-tester": "*"
   }
 }
