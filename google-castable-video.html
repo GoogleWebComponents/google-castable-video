@@ -38,11 +38,12 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         /**
          * The appId that references which receiver the Chromecast will load.
          *
-         * @property appId
-         * @type string
          * @default chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID
          */
-        appId: String
+        appId: {
+          type: String.
+          value: null
+        }
       },
 
       listeners: {
@@ -59,7 +60,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @default true
        */
       _bothPaused: true,
-      get bothPaused() { return this._bothPaused; },
+      get bothPaused() {
+        return this._bothPaused;
+      },
 
       /**
        * Sets or returns the current playback position (in seconds).
@@ -79,7 +82,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         }
       },
 
-      set bothCurrentTime(val) { return this.currentTime = val; },
+      set bothCurrentTime(val) {
+        return this.currentTime = val;
+      },
 
       /**
        * The mode state depending on whether the video is playing locally or on the cast device.
@@ -89,7 +94,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @default false
        */
       _casting: false,
-      get casting() { return this._casting; },
+      get casting() {
+        return this._casting;
+      },
 
       /**
        * Returns if any Chromecast is available.
@@ -99,7 +106,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @default false
        */
       _receiverAvailable: false,
-      get receiverAvailable() { return this._receiverAvailable; },
+      get receiverAvailable() {
+        return this._receiverAvailable;
+      },
 
       /**
        * The `chrome.cast.Media` object.
@@ -109,7 +118,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @default null
        */
       _castMedia: null,
-      get castMedia() { return this._castMedia; },
+      get castMedia() {
+        return this._castMedia;
+      },
 
       /**
        * The `chrome.cast.Session` object.
@@ -119,7 +130,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @default null
        */
       _session: null,
-      get session() { return this._session; },
+      get session() {
+        return this._session;
+      },
 
       ready: function() {
         // Initialize the cast api.
