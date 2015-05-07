@@ -1,7 +1,14 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="google-cast-sender-api.html">
 
-<!--
+<!-- TODO(tschaeff):
+- ratechange to change playbackspeed (if even possible)
+-->
+<script>
+  (function() {
+    // Set static variable for the timeupdate delay.
+    var _GOOGLE_CASTABLE_VIDEO_TIMEUPDATE_DELAY = 250;
+/**
 The `google-castable-video` element enables your HTML5 videos to be casted to any Chromecast.
 
 It behaves exactly like an HTML5 video element except for some added methods and events.
@@ -13,21 +20,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
     <video is="google-castable-video">
       <source src="video.mp4" type="video/mp4">
     </video>
-
-
-@element google-castable-video
-@blurb A web component for extending HTML5 video to make it Chromecast enabled.
-@status alpha
-@homepage http://googlewebcomponents.github.io/google-castable-video
--->
-<!-- TODO(tschaeff):
-- ratechange to change playbackspeed (if even possible)
--->
-<script>
-  (function() {
-    // Set static variable for the timeupdate delay.
-    var _GOOGLE_CASTABLE_VIDEO_TIMEUPDATE_DELAY = 250;
-
+*/
     Polymer({
 
       is: 'google-castable-video',
@@ -47,9 +40,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
       },
 
       listeners: {
-        'seeked': 'onSeeked',
-        'volumechange': 'onVolumechange',
-        'timeupdate': 'onTimeupdate'
+        'seeked': '_onSeeked',
+        'volumechange': '_onVolumechange',
+        'timeupdate': '_onTimeupdate'
       },
 
       /**
@@ -138,15 +131,15 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         // Initialize the cast api.
         window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
           if (loaded) {
-            this.initializeCastApi();
+            this._initializeCastApi();
           } else {
-            this.triggerError('INITIALIZE_ERROR');
+            this._triggerError('INITIALIZE_ERROR');
           }
         }.bind(this);
       },
 
       // Called internally when the cast sender api has been loaded.
-      initializeCastApi: function() {
+      _initializeCastApi: function() {
         if (this.appId === null || typeof this.appId === "undefined") {
           this.appId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
           // TODO ... process for selecting styled media receiver
@@ -155,17 +148,17 @@ Instead of listening for the video element's `timeupdate` event please listen fo
         var apiConfig = new chrome.cast.ApiConfig(sessionRequest,
           function(e){
             // The sessionListener.
-            this.triggerCasting(true);
+            this._triggerCasting(true);
             this._session = e;
             if (this._session.media.length) {
-              this.onMediaDiscovered.call(this, 'onRequestSessionSuccess', this._session.media[0]);
+              this._onMediaDiscovered.call(this, 'onRequestSessionSuccess', this._session.media[0]);
             }
             // Bind the session update listener.
-            this._session.addUpdateListener(this.sessionUpdateListener.bind(this));
+            this._session.addUpdateListener(this._sessionUpdateListener.bind(this));
             // Set interval for cast timeupdate.
             this._timeupdateInterval = setInterval(function(){
               if (this._castMedia && this._castMedia.playerState === 'PLAYING') {
-                this.triggerTimeupdate(this._castMedia.getEstimatedTime());
+                this._triggerTimeupdate(this._castMedia.getEstimatedTime());
                 this._bothPaused = false;
               } else {
                 this._bothPaused = true;
@@ -180,9 +173,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
           function(e){
             // The receiverListener
             if (e === chrome.cast.ReceiverAvailability.AVAILABLE) {
-              this.triggerAvailability(true);
+              this._triggerAvailability(true);
             } else {
-              this.triggerAvailability(false);
+              this._triggerAvailability(false);
             }
           }.bind(this));
         chrome.cast.initialize(apiConfig, function(){
@@ -195,7 +188,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
            */
           this.fire('google-castable-video-initialized');
         }.bind(this), function(){
-          this.triggerError('INITIALIZE_ERROR');
+          this._triggerError('INITIALIZE_ERROR');
         });
       },
 
@@ -210,9 +203,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
           // Create the session with the receiver.
           chrome.cast.requestSession(function(e){
             // The onRequestSessionSuccess handler gets executed when we're connected.
-            this.triggerCasting(true);
+            this._triggerCasting(true);
             this._session = e;
-            this._session.addUpdateListener(this.sessionUpdateListener.bind(this));
+            this._session.addUpdateListener(this._sessionUpdateListener.bind(this));
             // If video is playing start playing on chromecast at same position.
             if (!this.paused) {
               this.play();
@@ -221,7 +214,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
             // Set interval for cast timeupdate.
             this._timeupdateInterval = setInterval(function(){
               if (this._castMedia && this._castMedia.playerState === 'PLAYING') {
-                this.triggerTimeupdate(this._castMedia.getEstimatedTime());
+                this._triggerTimeupdate(this._castMedia.getEstimatedTime());
                 this._bothPaused = false;
               } else {
                 this._bothPaused = true;
@@ -232,10 +225,10 @@ Instead of listening for the video element's `timeupdate` event please listen fo
       },
 
       // Internal method gets called when the cast session status changes.
-      sessionUpdateListener: function(isAlive){
+      _sessionUpdateListener: function(isAlive){
         if (!isAlive) {
-          this.triggerCasting(false);
-          this.synchronizeMedia(true);
+          this._triggerCasting(false);
+          this._synchronizeMedia(true);
           // If video was playing on the receiver start playing locally.
           if (this._castMedia.playerState === 'PLAYING') {
             this.play();
@@ -249,15 +242,15 @@ Instead of listening for the video element's `timeupdate` event please listen fo
 
       // Internal method gets called when media was set through `launchsession`
       // or was already playing on cast device.
-      onMediaDiscovered: function(how, media) {
+      _onMediaDiscovered: function(how, media) {
         this._castMedia = media;
         if (how === 'loadMedia') {
-          this.synchronizeMedia(false);
+          this._synchronizeMedia(false);
         }
       },
 
       // Internal method to synchronize the media objects.
-      synchronizeMedia: function(castMaster){
+      _synchronizeMedia: function(castMaster){
         if (castMaster) {
           var position = this._castMedia.getEstimatedTime();
           this.currentTime = position;
@@ -292,9 +285,9 @@ Instead of listening for the video element's `timeupdate` event please listen fo
             );
             var request = new chrome.cast.media.LoadRequest(mediaInfo);
             this._session.loadMedia(request,
-              this.onMediaDiscovered.bind(this, 'loadMedia'),
+              this._onMediaDiscovered.bind(this, 'loadMedia'),
               function(e){
-                this.triggerError('LOAD_MEDIA_ERROR');
+                this._triggerError('LOAD_MEDIA_ERROR');
               }.bind(this)
             );
           } else {
@@ -325,7 +318,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @param {Object} detail
        *   @param {number} detail.currentTime The current video position.
        */
-      triggerTimeupdate: function(position) {
+      _triggerTimeupdate: function(position) {
         this.fire('google-castable-video-timeupdate', { currentTime: position });
       },
 
@@ -337,7 +330,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @param {Object} detail
        *   @param {string} detail.error The error type.
        */
-      triggerError: function(description) {
+      _triggerError: function(description) {
         this.fire('google-castable-video-error', { error: description });
       },
 
@@ -349,7 +342,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @param {Object} detail
        *   @param {bool} detail.available Shows if receivers are available.
        */
-      triggerAvailability: function(availability) {
+      _triggerAvailability: function(availability) {
         this._receiverAvailable = availability;
         this.fire('google-castable-video-receiver-status', { available: availability });
       },
@@ -362,13 +355,13 @@ Instead of listening for the video element's `timeupdate` event please listen fo
        * @param {Object} detail
        *   @param {bool} detail.casting True if connected.
        */
-      triggerCasting: function(casting) {
+      _triggerCasting: function(casting) {
         this._casting = casting;
         this.fire('google-castable-video-casting', { casting: casting });
       },
 
       // Redirecting `seeked` event to Chromecast.
-      onSeeked: function(){
+      _onSeeked: function(){
         if (this._casting) {
           var req = new chrome.cast.media.SeekRequest();
           req.currentTime = this.currentTime;
@@ -377,7 +370,7 @@ Instead of listening for the video element's `timeupdate` event please listen fo
       },
 
       // Redirecting `volumechange` event to Chromecast.
-      onVolumechange: function(){
+      _onVolumechange: function(){
         if (this._casting) {
           var volume = new chrome.cast.Volume(this.volume, this.muted);
           var volumeRequest = new chrome.cast.media.VolumeRequest(volume);
@@ -386,8 +379,8 @@ Instead of listening for the video element's `timeupdate` event please listen fo
       },
 
       // Redirecting `timeupdate` event to `google-castable-video-timeupdate`.
-      onTimeupdate: function(){
-        this.triggerTimeupdate(this.currentTime);
+      _onTimeupdate: function(){
+        this._triggerTimeupdate(this.currentTime);
         this._bothPaused = this.paused;
       }
     });
