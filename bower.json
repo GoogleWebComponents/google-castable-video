@@ -16,8 +16,7 @@
   "homepage": "https://github.com/GoogleWebComponents/google-castable-video",
   "ignore": [
     "/.*",
-    "/test/",
-    "/demo/"
+    "/test/"
   ],
   "dependencies": {
     "polymer": "Polymer/polymer#^1.0.0"
