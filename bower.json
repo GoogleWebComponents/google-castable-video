@@ -12,7 +12,7 @@
     "web-components"
   ],
   "main": "google-castable-video.html",
-  "license": "Apache-2",
+  "license": "Apache-2.0",
   "homepage": "https://github.com/GoogleWebComponents/google-castable-video",
   "ignore": [
     "/.*",
